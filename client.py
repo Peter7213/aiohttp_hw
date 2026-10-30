@@ -14,16 +14,20 @@ async def main():
         # print(resp.status)
         # print(await resp.json())
 
-        # resp = await  session.get('http://127.0.0.1:8080/ads/4')
-        # print(resp.status)
-        # print(await resp.json())
+        resp = await  session.get('http://127.0.0.1:8080/ads/5')
+        print(resp.status)
+        print(await resp.json())
 
         # resp = await  session.patch('http://127.0.0.1:8080/ads/4',
-        #                             json={'ad_body':'buy to flex on the poor'})
+        #                             json={'ad_body':'let's flex on the poor'})
         # print(resp.status)
         # print(await resp.json())
 
         # resp = await  session.delete('http://127.0.0.1:8080/ads/4')
+        # print(resp.status)
+        # print(await resp.json())
+
+        # resp = await  session.get('http://127.0.0.1:8080/ads')
         # print(resp.status)
         # print(await resp.json())
 

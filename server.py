@@ -4,12 +4,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 import json
 from schema import CreateAd, UpdateAd
 import pydantic
+from sqlalchemy import select
 
 
 def validate(incoming_json: dict, schema: type[CreateAd | UpdateAd]):
     try:
         return schema(**incoming_json).model_dump(exclude_unset=True)
-    except pydantic.ValueError as err:
+    except pydantic.ValidationError as err:
         raise get_error(web.HTTPBadRequest, str(err))
 
 
@@ -53,8 +54,17 @@ class AdView(web.View):
         return ad
 
     async def get(self):
-        ad = await self.get_ad()
-        return web.json_response(ad.dict)
+        ad_id = self.request.match_info.get('ad_id')
+        if ad_id:
+            ad = await self.session.get(Ad, int(ad_id))
+            if ad is None:
+                raise get_error(web.HTTPNotFound, "ad with this ID not found")
+            return web.json_response(ad.dict)
+        else:
+            result = await self.session.execute(select(Ad))
+            ads = result.scalars().all()
+            return web.json_response([ad.dict for ad in ads])
+
 
     async def post(self):
         json_data = validate(await self.request.json(), CreateAd)
@@ -65,7 +75,7 @@ class AdView(web.View):
         )
         self.session.add(ad)
         await self.session.commit()
-        return web.json_response(ad.dict)
+        return web.json_response(ad.dict, status=201)
 
     async def patch(self):
         json_data = validate(await self.request.json(), UpdateAd)
@@ -87,6 +97,7 @@ class AdView(web.View):
 
 app.add_routes(
     [
+        web.get('/ads', AdView),
         web.post('/ads', AdView),
         web.get(r'/ads/{ad_id:\d+}', AdView),
         web.patch(r'/ads/{ad_id:\d+}', AdView),
